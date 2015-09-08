@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="1"
+    android:visibility="visible"
+    android:focusable="true"
+    android:clickable="true"
+    android:id="@+id/inp_rel">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/inp_lin"
+        android:weightSum="1">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:ems="10"
+            android:id="@+id/inp_code_txt"
+            android:layout_gravity="top"
+            android:layout_weight="0.91"
+            android:gravity="top"
+            android:textAlignment="gravity" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.10"
+            android:weightSum="1">
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="160dp"
+                android:layout_height="match_parent"
+                android:text="Clear"
+                android:id="@+id/inp_code_clr"
+                android:layout_weight="0.44"
+                android:layout_marginLeft="5dp"
+                android:onClick="inp_code_clr" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="160dp"
+                android:layout_height="match_parent"
+                android:text="Submit"
+                android:id="@+id/inp_code_ok"
+                android:layout_weight="0.44"
+                android:layout_marginLeft="15dp"
+                android:onClick="inp_code_ok" />
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>
