@@ -23,6 +23,7 @@
 package com.example.code;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -38,6 +39,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class MainActivity extends Activity {
 
@@ -115,6 +118,118 @@ public class MainActivity extends Activity {
     }
 
     public void u_i_ok(View view) {
+        AsyncTask as = new Async();
+        as.execute();
+    }
+
+
+    class Async extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected void onPreExecute() {
+            try {
+                stdin = findViewById(R.id.u_i_txt).toString();
+
+                setContentView(R.layout.execute_code);
+
+                URL u_submit = new URL(host + "submit-code/?format=json");
+                connect = (HttpURLConnection) u_submit.openConnection();
+                connect.setRequestMethod("POST");
+                connect.setDoOutput(true);
+
+                String s = "lang=python&"
+                        + "code=print \"Hello\"";
+
+                DataOutputStream dos = new DataOutputStream(connect.getOutputStream());
+                dos.writeBytes(s);
+                dos.flush();
+                dos.close();
+
+                InputStream inpstrm = connect.getInputStream();
+                BufferedReader response = new BufferedReader(new InputStreamReader(inpstrm));
+
+                String str, jstr = "";
+
+                while ((str = response.readLine()) != null) {
+                    jstr = jstr + str;
+                }
+
+                JSONObject jobj = new JSONObject(jstr);
+                id = jobj.get("id").toString();
+            } catch (Exception e) {
+                setContentView(R.layout.try_again);
+            }
+
+        }
+
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            String s = null;
+
+
+            try {
+                URL u_status = new URL(host + "status-code/" + id + "/?format=json");
+                connect = (HttpURLConnection) u_status.openConnection();
+
+                while (!s.equals("2")) {
+                    BufferedReader status = new BufferedReader(new InputStreamReader(connect.getInputStream()));
+
+                    String res, stat = "";
+
+                    while ((res = status.readLine()) != null) {
+                        stat += res;
+                    }
+
+                    JSONObject jstatobj = new JSONObject(stat);
+
+                    s = jstatobj.get("status").toString();
+                    Thread.sleep(5000);
+                }
+                status_global = true;
+            } catch (Exception e) {
+                setContentView(R.layout.try_again);
+            }
+            return status_global;
+        }
+
+
+        protected void onPostExecute(Boolean b) {
+            TextView txt;
+            txt = (TextView) findViewById(R.id.finall);
+            try {
+                if (b) {
+                    URL u_result = new URL(host + "result-code/" + id + "/?format=json");
+                    connect = (HttpURLConnection) u_result.openConnection();
+                    int res_code = connect.getResponseCode();
+
+                    if (res_code == 201) {
+                        BufferedReader result = new BufferedReader(new InputStreamReader(connect.getInputStream()));
+                        String res, r = "";
+
+                        while ((res = result.readLine()) != null) {
+                            r += res;
+                        }
+
+                        JSONObject jresobj = new JSONObject(r);
+
+                        if (jresobj.get("stderr") == "")
+                            txt.setText(jresobj.get("stdout").toString());
+                        else
+                            txt.setText(jresobj.get("stderr").toString());
+                    } else
+                        setContentView(R.layout.try_again);
+                }
+            } catch (Exception e) {
+                //  Log.e("u_i_ok", e.getMessage(), e.fillInStackTrace());
+                txt.setText(e.toString());
+
+            }
+        }
+
+    }
+}
+ /*   public void u_i_ok(View view) {
         EditText txt1 = (EditText) findViewById(R.id.u_i_txt);
         stdin = txt1.getText().toString();
         final TextView txt;
@@ -234,132 +349,13 @@ public class MainActivity extends Activity {
         }).start();
 
 
-    }
-}
+    }*/
 /*
 
 public class Extra {
-    class Async extends AsyncTask<Void, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            int s = 1;
-
-            try {
-                URL u_status = new URL(host + "status-code/" + id + "/?format=json");
-                connect = (HttpURLConnection) u_status.openConnection();
-
-                while (s != 2) {
-                    BufferedReader status = new BufferedReader(new InputStreamReader(connect.getInputStream()));
-
-                    String res, stat = "";
-
-                    while ((res = status.readLine()) != null) {
-                        stat += res;
-                    }
-
-                    JSONObject jstatobj = new JSONObject(stat);
-
-                    s = Integer.parseInt(jstatobj.get("status").toString());
-                    Thread.sleep(5000);
-                }
-                status_global = true;
-            } catch (Exception e) {
-                setContentView(R.layout.try_again);
-            }
-            return status_global;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            try {
-                stdin = findViewById(R.id.u_i_txt).toString();
-
-                setContentView(R.layout.execute_code);
-
-                URL u_submit = new URL(host + "submit-code/?format=json");
-                connect = (HttpURLConnection) u_submit.openConnection();
-                connect.setRequestMethod("POST");
-                connect.setDoOutput(true);
-
-                String s = "lang=python&"
-                        + "code=print \"Hello\"";
-
-                DataOutputStream dos = new DataOutputStream(connect.getOutputStream());
-                dos.writeBytes(s);
-                dos.flush();
-                dos.close();
-
-                InputStream inpstrm = connect.getInputStream();
-                BufferedReader response = new BufferedReader(new InputStreamReader(inpstrm));
-
-                String str, jstr = "";
-
-                while ((str = response.readLine()) != null) {
-                    jstr = jstr + str;
-                }
-
-                JSONObject jobj = new JSONObject(jstr);
-                id = jobj.get("id").toString();
-            } catch (Exception e) {
-                setContentView(R.layout.try_again);
-            }
-
-        }
-
-        protected void onPostExecute(Boolean b) {
-            try {
-                if (b) {
-                    URL u_result = new URL(host + "result-code/" + id + "/?format=json");
-                    connect = (HttpURLConnection) u_result.openConnection();
-                    int res_code = connect.getResponseCode();
-
-                    if (res_code == 201) {
-                        BufferedReader result = new BufferedReader(new InputStreamReader(connect.getInputStream()));
-                        String res, r = "";
-
-                        while ((res = result.readLine()) != null) {
-                            r += res;
-                        }
-
-                        JSONObject jresobj = new JSONObject(r);
-
-                        if (jresobj.get("stderr") == "")
-                            txt.setText(jresobj.get("stdout").toString());
-                        else
-                            txt.setText(jresobj.get("stderr").toString());
-                    } else
-                        setContentView(R.layout.try_again);
-                }
-            } catch (Exception e) {
-                //  Log.e("u_i_ok", e.getMessage(), e.fillInStackTrace());
-                txt.setText(e.toString().toCharArray(), 0, e.toString().toCharArray().length);
-
-            }
-        }
 
     }
 
-    public void u_i_ok(View view) {
-        AsyncTask as = new Async();
-        as.execute();
-        try {
-            setContentView(R.layout.execute_code);
-            txt = (TextView) findViewById(R.id.finall);
-        } catch (Exception e) {
-            Log.e("1", e.getMessage(), e.fillInStackTrace());
-        }
-        try {
-            txt.setText("");
-        } catch (Exception e) {
-            Log.e("2", e.getMessage(), e.fillInStackTrace());
-        }
-        try {
-            AsyncTask as = new Async();
-            as.execute();
-        } catch (Exception e) {
-            Log.e("3", e.getMessage(), e.fillInStackTrace());
-        }
 
 
     public void u_i_ok(View view) {
